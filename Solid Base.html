@@ -1352,10 +1352,42 @@ $('#ifb').onclick=()=>{
   /* ---------- settings (Formspree link) and one-tap links from the notification email ---------- */
   window.sbCfg={};
   function fsEp(){return (window.sbCfg&&window.sbCfg.formspree)||FORM_ENDPOINT||''}
-  async function loadSettings(){
-    if(!USE_FIREBASE)return;
-    try{const f=await initFb(),sn=await f.db.collection('settings').doc('site').get();if(sn.exists)window.sbCfg=Object.assign({},sn.data())}catch(e){}
+  
+async function loadSettings() {
+  if (!USE_FIREBASE) return;
+
+  try {
+    const f = await initFb();
+
+    const siteSnap = await f.db
+      .collection('settings')
+      .doc('site')
+      .get();
+
+    let adminSettings = {};
+
+    if (isAdmin) {
+      const adminSnap = await f.db
+        .collection('settings')
+        .doc('admin')
+        .get();
+
+      if (adminSnap.exists) {
+        adminSettings = adminSnap.data();
+      }
+    }
+
+    window.sbCfg = Object.assign(
+      {},
+      siteSnap.exists ? siteSnap.data() : {},
+      adminSettings
+    );
+
+  } catch (e) {
+    console.warn('Could not load email settings:', e);
   }
+}
+
   let pendingAct=(()=>{try{const q=new URLSearchParams(location.search),a=q.get('answered'),r=q.get('reply'),ok=v=>v&&/^[A-Za-z0-9]{8,40}$/.test(v);
     if(ok(a))return{type:'answered',id:a};if(ok(r))return{type:'reply',id:r}}catch(e){}return null})();
   async function runPendingAct(){
@@ -1678,7 +1710,7 @@ $('#ifb').onclick=()=>{
     initFb().then(f=>f.auth.onAuthStateChanged(async u=>{
       if(!u&&markerOk()){store.set('sb-session','');lock(false)}
       if(u&&markerOk()&&await enforceBlock(u))return;
-      setAdmin(u&&markerOk()?u:null);
+      await setAdmin(u&&markerOk()?u:null);
       if(u&&markerOk()){refreshProjects();loadSettings();startMine();if(window.sbTrack)window.sbTrack.visit().catch(()=>{})}
     })).catch(()=>{});
   }else{
