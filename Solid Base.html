@@ -927,7 +927,7 @@ async function copyText(t,ok){try{await navigator.clipboard.writeText(t);toast(o
     const ep=(window.sbCfg&&window.sbCfg.formspree)||FORM_ENDPOINT;
     if(!ep){console.warn('Email alerts are off: no Formspree link. Save it in Dashboard > Settings.');return}
     const base='https://solidbase670.github.io/Solid-base/Solid%20Base.html';
-    const fields={_subject:d.subject,name:d.name,email:d.email,type:d.type,message:d.message,
+    const fields={_subject:d.subject,name:d.name,customer_email:d.email,_replyto:d.email,type:d.type,message:d.message,
       reply_on_the_website:base+'?reply='+id,mark_as_answered:base+'?answered='+id};
     const fd=new FormData();Object.keys(fields).forEach(k=>fd.append(k,fields[k]));
     fetch(ep,{method:'POST',headers:{Accept:'application/json'},body:fd})
